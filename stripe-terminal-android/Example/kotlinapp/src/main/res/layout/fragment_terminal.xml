@@ -88,6 +88,16 @@
                     android:text="@string/discover_readers"
                     android:textColor="@color/colorAccent" />
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/discover_taptopay"
+                    style="@style/Widget.Example.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cornerRadius="0dp"
+                    android:textAlignment="textStart"
+                    android:text="@string/test_tap_to_pay"
+                    android:textColor="@color/colorAccent" />
+
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

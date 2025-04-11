@@ -17,6 +17,7 @@
     <string name="discovery">Discovery</string>
     <string name="discovery_method">DISCOVERY METHOD</string>
     <string name="discover_readers">Discover Readers</string>
+    <string name="test_tap_to_pay">Test Tap to Pay</string>
     <string name="done">Done</string>
     <string name="empty_reader">Empty Reader</string>
     <string name="event_log">EVENT LOG</string>

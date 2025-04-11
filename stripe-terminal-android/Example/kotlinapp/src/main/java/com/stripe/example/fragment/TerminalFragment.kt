@@ -2,12 +2,14 @@ package com.stripe.example.fragment
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import androidx.core.content.edit
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import com.stripe.example.DiscoverReadersActivity
 import com.stripe.example.NavigationListener
 import com.stripe.example.R
 import com.stripe.example.databinding.FragmentTerminalBinding
@@ -96,6 +98,12 @@ class TerminalFragment : Fragment(R.layout.fragment_terminal) {
                 viewModel.simulated,
                 viewModel.discoveryMethod,
             )
+        }
+
+        // Link tap to pay button
+        viewBinding.discoverTaptopay.setOnClickListener {
+            val intent = Intent(requireContext(), DiscoverReadersActivity::class.java)
+            startActivity(intent)
         }
     }
 
