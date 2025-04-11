@@ -1,23 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical"
     android:padding="16dp">
 
-    <TextView
-        android:id="@+id/statusTextView"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Discovering readers..."
-        android:textSize="18sp" />
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
 
-    <Button
-        android:id="@+id/cancelDiscoveryButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Cancel Discovery"
-        android:layout_marginTop="20dp"/>
+        <TextView
+            android:id="@+id/readerStatusTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Checking reader status..."
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="50dp"
+            android:padding="12dp" />
 
-</LinearLayout>
+        <CheckBox
+            android:id="@+id/testModeCheckBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Is Test Mode"
+            android:checked="true" />
+
+        <Button
+            android:id="@+id/connectReaderButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Connect NFC Reader"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/colorAccent" />
+
+        <TextView
+            android:id="@+id/locationStatusTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="(Location)"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:padding="12dp" />
+
+        <LinearLayout
+            android:id="@+id/paymentLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginTop="24dp"
+            android:padding="12dp"
+            android:background="#EFEFEF"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Enter Amount"
+                android:textSize="16sp"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/amountInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="0.00"
+                android:inputType="numberDecimal"
+                android:textAlignment="center"
+                android:padding="12dp"
+                android:textSize="18sp"
+                android:background="@android:drawable/edit_text" />
+
+            <Button
+                android:id="@+id/chargeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Charge Card"
+                android:layout_marginTop="16dp" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
