@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.stripe.example.fragment.ConnectedReaderFragment
+import com.stripe.example.fragment.KeypadFragment
 import com.stripe.example.fragment.PaymentFragment
 import com.stripe.example.fragment.TerminalFragment
 import com.stripe.example.fragment.UpdateReaderFragment
@@ -188,6 +189,22 @@ class MainActivity :
      */
     override fun onSelectViewOfflineLogs() {
         navigateTo(OfflinePaymentsLogFragment.TAG, OfflinePaymentsLogFragment())
+    }
+
+    override fun onSelectKeycardPaymentWorkflow() {
+        navigateTo(KeypadFragment.TAG, KeypadFragment())
+    }
+
+    override fun onChargeKeypadAmount(amount: Long, currency: String) {
+        // Call the existing payment request function with defaults for keypad flow
+        onRequestPayment(
+            amount = amount,
+            currency = currency,
+            skipTipping = false, // Default for keypad
+            extendedAuth = false, // Default for keypad
+            incrementalAuth = false, // Default for keypad
+            offlineBehaviorSelection = OfflineBehaviorSelection.DEFAULT // Default for keypad
+        )
     }
 
     // Terminal event callbacks

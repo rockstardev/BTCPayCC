@@ -117,6 +117,18 @@
                 app:iconTint="@color/colorPrimaryDark" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/keycard_payment_button"
+                style="@style/Widget.Example.Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layoutDirection="rtl"
+                app:cornerRadius="0dp"
+                android:textAlignment="textStart"
+                android:text="@string/keycard_payment"
+                app:icon="@drawable/ic_right_arrow"
+                app:iconTint="@color/colorPrimaryDark" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/save_card_button"
                 style="@style/Widget.Example.Button"
                 android:layout_width="match_parent"

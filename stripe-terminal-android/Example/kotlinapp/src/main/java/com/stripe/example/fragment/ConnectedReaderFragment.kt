@@ -85,6 +85,11 @@ class ConnectedReaderFragment : Fragment() {
             (activity as? NavigationListener)?.onSelectPaymentWorkflow()
         }
 
+        // Set up the keycard payment button
+        view.findViewById<View>(R.id.keycard_payment_button).setOnClickListener {
+            (activity as? NavigationListener)?.onSelectKeycardPaymentWorkflow()
+        }
+
         // Set up the save card button
         view.findViewById<View>(R.id.save_card_button).setOnClickListener {
             (activity as? NavigationListener)?.onRequestSaveCard()

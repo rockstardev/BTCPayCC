@@ -61,6 +61,11 @@ interface NavigationListener {
     fun onSelectPaymentWorkflow()
 
     /**
+     * Notify the activity that the user wants to start the keycard payment workflow
+     */
+    fun onSelectKeycardPaymentWorkflow()
+
+    /**
      * Notify the `Activity` that the user wants to start the workflow to save a card
      */
     fun onRequestSaveCard()
@@ -74,6 +79,14 @@ interface NavigationListener {
      * Notify the `Activity` that the user wants to view the offline logs
      */
     fun onSelectViewOfflineLogs()
+
+    /**
+     * Notify the `Activity` that the user has confirmed the amount on the keypad and wants to charge.
+     *
+     * @param amount The amount to charge, in the lowest denomination of the currency (e.g., cents)
+     * @param currency The currency code (e.g., "usd")
+     */
+    fun onChargeKeypadAmount(amount: Long, currency: String)
 
     /**
      * Notify the `Activity` that the user has requested to change the location.
