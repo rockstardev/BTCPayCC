@@ -296,6 +296,7 @@ class MainActivity :
     }
 
     override fun onDisconnectReader() {
+        Log.w("MainActivity", "onDisconnectReader called! Navigating back to TerminalFragment.")
         navigateTo(TerminalFragment.TAG, TerminalFragment())
     }
 
@@ -450,7 +451,7 @@ class MainActivity :
      *
      * @param fragment Fragment to navigate to.
      */
-    private fun navigateTo(
+    public fun navigateTo(
         tag: String,
         fragment: Fragment,
         replace: Boolean = true,

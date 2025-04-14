@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.content.edit
+import com.stripe.example.fragment.ConnectedReaderFragment
 import com.stripe.stripeterminal.Terminal
 import com.stripe.stripeterminal.external.callable.Callback
 import com.stripe.stripeterminal.external.callable.Cancelable
@@ -126,9 +127,9 @@ class ReaderConnectionPersistence(context: Context) {
 
         // Determine Discovery Configuration based on connection type
         val discoveryConfig: DiscoveryConfiguration = when (lastConnectionType) {
-            ConnectionType.BLUETOOTH -> DiscoveryConfiguration.BluetoothDiscoveryConfiguration(10, lastIsSimulated)
+            ConnectionType.BLUETOOTH -> DiscoveryConfiguration.BluetoothDiscoveryConfiguration(15, lastIsSimulated)
             ConnectionType.TAP_TO_PAY -> DiscoveryConfiguration.TapToPayDiscoveryConfiguration(lastIsSimulated)
-            ConnectionType.INTERNET -> DiscoveryConfiguration.InternetDiscoveryConfiguration(10, lastLocationId, lastIsSimulated)
+            ConnectionType.INTERNET -> DiscoveryConfiguration.InternetDiscoveryConfiguration(15, lastLocationId, lastIsSimulated)
             // No 'else' needed because we checked lastConnectionType is not null earlier
         }
 
@@ -234,6 +235,7 @@ class ReaderConnectionPersistence(context: Context) {
             object : ReaderCallback { // Callback for this specific connection attempt
                 override fun onSuccess(connectedReader: Reader) {
                     Log.i("ReaderConnectionPersistence", "connectReader (for reconnect) successful for ${connectedReader.serialNumber}.")
+                    activity.navigateTo(ConnectedReaderFragment.TAG, ConnectedReaderFragment())
                     // MainActivity's listeners (passed as 'listener') will handle UI updates
                 }
 
