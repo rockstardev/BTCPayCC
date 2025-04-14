@@ -27,6 +27,8 @@ class KeypadFragment : Fragment() {
     // State
     private var currentEntryString: String = "0"
     private val addedAmounts = mutableListOf<Long>()
+    private var exitCodeSequence = "" // Track the exit code sequence
+    private val TARGET_EXIT_SEQUENCE = "CC++C+"
 
     // Views
     private lateinit var amountDisplay: TextView
@@ -70,6 +72,7 @@ class KeypadFragment : Fragment() {
         } else if (currentEntryString.length < MAX_DIGITS) {
             currentEntryString += digit.toString()
         }
+        resetExitCodeSequence() // Reset sequence on number press
         updateDisplay()
     }
 
@@ -77,6 +80,7 @@ class KeypadFragment : Fragment() {
         if (currentEntryString != "0") {
             // 1. Clear current entry if it's not zero
             currentEntryString = "0"
+            resetExitCodeSequence() // Reset sequence if it clears a non-zero entry
         } else {
             // 2. Current entry is zero. Check if there are added amounts.
             if (addedAmounts.isNotEmpty()) {
@@ -86,8 +90,11 @@ class KeypadFragment : Fragment() {
                 if (addedAmounts.isEmpty()) {
                      breakdownDisplay.visibility = View.INVISIBLE // Hide breakdown if it was the only added amount
                 }
+                resetExitCodeSequence() // Reset sequence if undoing +
+            } else {
+                 // 3. If current entry was zero AND addedAmounts was empty, maybe continue exit sequence
+                 handleExitCodeSequenceInput('C')
             }
-            // 3. If current entry was zero AND addedAmounts was empty, do nothing.
         }
         updateDisplay() // Update display regardless
     }
@@ -103,6 +110,8 @@ class KeypadFragment : Fragment() {
             breakdownDisplay.visibility = View.VISIBLE
             updateDisplay()
         }
+        // Always check for exit sequence on '+' press
+        handleExitCodeSequenceInput('+')
     }
 
     private fun onChargePressed() {
@@ -110,6 +119,7 @@ class KeypadFragment : Fragment() {
         if (finalAmountCents > 0) {
             (activity as? NavigationListener)?.onChargeKeypadAmount(finalAmountCents, CURRENCY)
         }
+        resetExitCodeSequence() // Reset sequence on charge press
     }
 
     private fun calculateTotalCents(): Long {
@@ -135,5 +145,36 @@ class KeypadFragment : Fragment() {
     private fun formatCentsToString(cents: Long): String {
         // Consider making Locale dynamic if supporting other regions
         return NumberFormat.getCurrencyInstance(Locale.US).format(cents / 100.0)
+    }
+
+    // --- Exit Code Sequence Logic ---
+
+    private fun handleExitCodeSequenceInput(key: Char) {
+        exitCodeSequence += key
+
+        // If sequence doesn't match prefix or is too long, reset
+        if (!TARGET_EXIT_SEQUENCE.startsWith(exitCodeSequence)) {
+             resetExitCodeSequence()
+             // If the pressed key itself doesn't start the sequence, ensure it's reset
+             if (!TARGET_EXIT_SEQUENCE.startsWith(key.toString())) {
+                 exitCodeSequence = ""
+             } else {
+                 // Start a new sequence if the current key is the start
+                 exitCodeSequence = key.toString()
+             }
+        }
+
+        // Check for match
+        if (exitCodeSequence == TARGET_EXIT_SEQUENCE) {
+            exitCodeSequence = "" // Reset after success
+            (activity as? NavigationListener)?.onCancelKeypadEntry()
+        }
+    }
+
+    private fun resetExitCodeSequence() {
+        if (exitCodeSequence.isNotEmpty()) {
+           exitCodeSequence = ""
+           // Optional: Add a Log or Toast here for debugging if needed
+        }
     }
 }

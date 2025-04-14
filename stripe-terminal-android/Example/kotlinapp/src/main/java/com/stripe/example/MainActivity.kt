@@ -192,7 +192,7 @@ class MainActivity :
     }
 
     override fun onSelectKeycardPaymentWorkflow() {
-        navigateTo(KeypadFragment.TAG, KeypadFragment())
+        navigateTo(KeypadFragment.TAG, KeypadFragment(), addToBackStack = true)
     }
 
     override fun onChargeKeypadAmount(amount: Long, currency: String) {
@@ -205,6 +205,11 @@ class MainActivity :
             incrementalAuth = false, // Default for keypad
             offlineBehaviorSelection = OfflineBehaviorSelection.DEFAULT // Default for keypad
         )
+    }
+
+    override fun onCancelKeypadEntry() {
+        // Exit the keypad fragment by popping the back stack
+        supportFragmentManager.popBackStack()
     }
 
     // Terminal event callbacks

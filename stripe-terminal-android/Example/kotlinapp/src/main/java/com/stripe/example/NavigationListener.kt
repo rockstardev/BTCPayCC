@@ -89,6 +89,11 @@ interface NavigationListener {
     fun onChargeKeypadAmount(amount: Long, currency: String)
 
     /**
+     * Notify the `Activity` that the user wants to cancel/exit the keypad entry.
+     */
+    fun onCancelKeypadEntry()
+
+    /**
      * Notify the `Activity` that the user has requested to change the location.
      */
     fun onRequestLocationSelection()
