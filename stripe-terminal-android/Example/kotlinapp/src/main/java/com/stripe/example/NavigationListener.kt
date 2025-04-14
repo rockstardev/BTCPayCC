@@ -3,6 +3,7 @@ package com.stripe.example
 import com.stripe.example.fragment.discovery.DiscoveryMethod
 import com.stripe.example.model.OfflineBehaviorSelection
 import com.stripe.stripeterminal.external.models.Reader
+import com.stripe.stripeterminal.external.models.Location
 
 /**
  * An `Activity` that should be notified when various navigation activities have been triggered
@@ -92,6 +93,16 @@ interface NavigationListener {
      * Notify the `Activity` that the user wants to cancel/exit the keypad entry.
      */
     fun onCancelKeypadEntry()
+
+    /**
+     * Notify the `Activity` that the user wants to clear the saved reader connection details.
+     */
+    fun onRequestClearSavedConnection()
+
+    /**
+     * Check if the `Activity` has saved reader connection details.
+     */
+    fun hasSavedConnectionDetails(): Boolean
 
     /**
      * Notify the `Activity` that the user has requested to change the location.

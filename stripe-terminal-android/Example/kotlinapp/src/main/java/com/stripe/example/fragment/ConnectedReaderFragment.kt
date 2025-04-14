@@ -1,6 +1,7 @@
 package com.stripe.example.fragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,8 +22,8 @@ import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 
 /**
- * The `ConnectedReaderFragment` displays the reader that's currently connected and provides
- * options for workflows that can be executed.
+ * The `ConnectedReaderFragment` shows the reader connection status and allows starting
+ * various workflows.
  */
 @OptIn(OfflineMode::class)
 class ConnectedReaderFragment : Fragment() {
@@ -30,6 +31,8 @@ class ConnectedReaderFragment : Fragment() {
     companion object {
         const val TAG = "com.stripe.example.fragment.ConnectedReaderFragment"
     }
+
+    private lateinit var clearSavedConnectionButton: View
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -58,13 +61,14 @@ class ConnectedReaderFragment : Fragment() {
                     activityRef.get()?.let {
                         if (it is NavigationListener) {
                             it.runOnUiThread {
-                                it.onDisconnectReader()
+                                (it as? NavigationListener)?.onDisconnectReader()
                             }
                         }
                     }
                 }
 
                 override fun onFailure(e: TerminalException) {
+                    Log.e("ConnectedReaderFragment", "Failed to disconnect reader", e)
                 }
             })
         }
@@ -105,6 +109,15 @@ class ConnectedReaderFragment : Fragment() {
             (activity as? NavigationListener)?.onSelectViewOfflineLogs()
         }
 
+        clearSavedConnectionButton = view.findViewById(R.id.clear_saved_connection_button)
+        clearSavedConnectionButton.setOnClickListener {
+            // Call the listener method (to be added to NavigationListener)
+            (activity as? NavigationListener)?.onRequestClearSavedConnection()
+        }
+
+        // Update button visibility based on saved state
+        updateClearButtonVisibility()
+
         return view
     }
 
@@ -112,5 +125,12 @@ class ConnectedReaderFragment : Fragment() {
         view?.findViewById<TerminalOnlineIndicator>(R.id.online_indicator).run {
             this?.networkStatus = networkStatus
         }
+    }
+
+    // Public function called by MainActivity when prefs are cleared
+    fun updateClearButtonVisibility() {
+        // Check if saved details exist via the listener (to be added to NavigationListener)
+        val hasSavedDetails = (activity as? NavigationListener)?.hasSavedConnectionDetails() ?: false
+        clearSavedConnectionButton.visibility = if (hasSavedDetails) View.VISIBLE else View.GONE
     }
 }

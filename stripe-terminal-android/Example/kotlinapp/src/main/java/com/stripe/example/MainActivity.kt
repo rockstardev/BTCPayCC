@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.stripe.example.fragment.ConnectedReaderFragment
+import com.stripe.example.fragment.ConnectingToReaderFragment
 import com.stripe.example.fragment.KeypadFragment
 import com.stripe.example.fragment.PaymentFragment
 import com.stripe.example.fragment.TerminalFragment
@@ -25,10 +26,12 @@ import com.stripe.example.network.TokenProvider
 import com.stripe.stripeterminal.Terminal
 import com.stripe.stripeterminal.external.OfflineMode
 import com.stripe.stripeterminal.external.callable.Cancelable
+import com.stripe.stripeterminal.external.callable.Callback
 import com.stripe.stripeterminal.external.callable.InternetReaderListener
 import com.stripe.stripeterminal.external.callable.MobileReaderListener
 import com.stripe.stripeterminal.external.callable.TapToPayReaderListener
 import com.stripe.stripeterminal.external.models.ConnectionStatus
+import com.stripe.stripeterminal.external.models.DeviceType
 import com.stripe.stripeterminal.external.models.DisconnectReason
 import com.stripe.stripeterminal.external.models.Location
 import com.stripe.stripeterminal.external.models.Reader
@@ -37,6 +40,7 @@ import com.stripe.stripeterminal.external.models.ReaderInputOptions
 import com.stripe.stripeterminal.external.models.ReaderSoftwareUpdate
 import com.stripe.stripeterminal.external.models.TerminalException
 import com.stripe.stripeterminal.log.LogLevel
+import com.stripe.example.ReaderConnectionPersistence
 
 class MainActivity :
     AppCompatActivity(),
@@ -46,13 +50,16 @@ class MainActivity :
     InternetReaderListener,
     LocationSelectionController {
 
-    /**
-     * Upon starting, we should verify we have the permissions we need, then start the app
-     */
+    private lateinit var readerConnectionPersistence: ReaderConnectionPersistence
+
+    private var reconnectDiscoveryCancelable: Cancelable? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
+
+        readerConnectionPersistence = ReaderConnectionPersistence(applicationContext)
 
         if (
             ContextCompat.checkSelfPermission(
@@ -147,7 +154,7 @@ class MainActivity :
         offlineBehaviorSelection: OfflineBehaviorSelection,
     ) {
         navigateTo(
-                EventFragment.TAG,
+            EventFragment.TAG,
             EventFragment.requestPayment(
                 amount,
                 currency,
@@ -208,8 +215,24 @@ class MainActivity :
     }
 
     override fun onCancelKeypadEntry() {
-        // Exit the keypad fragment by popping the back stack
         supportFragmentManager.popBackStack()
+    }
+
+    override fun onRequestClearSavedConnection() {
+        Log.d("MainActivity", "Clearing saved reader connection details.")
+        readerConnectionPersistence.clearReaderConnectionDetails()
+        // Optionally, force update the fragment's button visibility if it doesn't auto-update
+        supportFragmentManager.findFragmentByTag(ConnectedReaderFragment.TAG)?.let {
+            if (it is ConnectedReaderFragment && it.isVisible) {
+                it.updateClearButtonVisibility()
+            }
+        }
+        // After clearing, maybe navigate back to discovery? Or let the user disconnect manually.
+        // For now, just clear and let the ConnectedReaderFragment update.
+    }
+
+    override fun hasSavedConnectionDetails(): Boolean {
+        return readerConnectionPersistence.hasSavedConnectionDetails()
     }
 
     // Terminal event callbacks
@@ -232,6 +255,43 @@ class MainActivity :
      * Callback function called on completion of [Terminal.connectReader]
      */
     override fun onConnectReader() {
+        Log.d("MainActivity", "onConnectReader callback triggered.")
+        val reader = Terminal.getInstance().connectedReader
+        // Ensure reader and required properties are non-null before accessing them
+        if (reader != null && reader.location != null && reader.serialNumber != null) {
+            val currentLocationId = reader.location!!.id.toString()
+            val currentSerialNumber = reader.serialNumber!!
+
+            // Determine type based on reader properties
+            val connectionType = when {
+                // Check if it's a known Tap to Pay / Local Mobile reader type
+                reader.deviceType == DeviceType.TAP_TO_PAY_DEVICE -> {
+                    Log.d("MainActivity", "Reader identified as TAP_TO_PAY.")
+                    ReaderConnectionPersistence.ConnectionType.TAP_TO_PAY
+                }
+                // Check network status for Internet type
+                reader.networkStatus == Reader.NetworkStatus.ONLINE -> {
+                    Log.d("MainActivity", "Reader identified as INTERNET.")
+                    ReaderConnectionPersistence.ConnectionType.INTERNET
+                }
+                // Default to Bluetooth if not TapToPay or Internet
+                else -> {
+                    Log.d("MainActivity", "Reader identified as BLUETOOTH.")
+                    ReaderConnectionPersistence.ConnectionType.BLUETOOTH
+                }
+            }
+
+            // Save details *inside* the null check
+            readerConnectionPersistence.saveReaderConnectionDetails(
+                currentLocationId, // Use non-null vars
+                currentSerialNumber,
+                connectionType // Pass the determined type
+            )
+            Log.d("MainActivity", "Saved connection details: Type=$connectionType, Serial=$currentSerialNumber, Location=$currentLocationId")
+        } else {
+            Log.w("MainActivity", "onConnectReader called but reader or essential details are null.")
+        }
+        // Navigate to the standard connected reader screen
         navigateTo(ConnectedReaderFragment.TAG, ConnectedReaderFragment())
     }
 
@@ -326,23 +386,63 @@ class MainActivity :
      * Initialize the [Terminal] and go to the [TerminalFragment]
      */
     @OptIn(OfflineMode::class)
-    private fun initialize() {
+    private fun initialize(attemptReconnect: Boolean = true) {
         // Initialize the Terminal as soon as possible
         try {
             if (!Terminal.isInitialized()) {
                 Terminal.initTerminal(
-                        applicationContext,
-                        LogLevel.VERBOSE,
-                        TokenProvider(),
-                        TerminalEventListener,
-                        TerminalOfflineListener
+                    applicationContext,
+                    LogLevel.VERBOSE,
+                    TokenProvider(),
+                    TerminalEventListener,
+                    TerminalOfflineListener
                 )
             }
         } catch (e: TerminalException) {
             throw RuntimeException(e)
         }
 
-        navigateTo(TerminalFragment.TAG, TerminalFragment())
+        // Check if all details are present and we should attempt reconnect
+        if (attemptReconnect && readerConnectionPersistence.hasSavedConnectionDetails()) {
+            Log.i("MainActivity", "Saved reader details found. Attempting reconnect via ReaderConnectionPersistence.")
+
+            // Common failure handler - now expects ReconnectException
+            val failureCallback = { e: ReaderConnectionPersistence.ReconnectException ->
+                Log.e("MainActivity", "Reconnect process failed: ${e.message}", e.cause) // Log message and original cause
+                readerConnectionPersistence.clearReaderConnectionDetails() // Clear invalid details
+                reconnectDiscoveryCancelable = null // Clear cancelable on failure
+                runOnUiThread {
+                    // Only navigate if we are not already connected or connecting
+                    if (Terminal.getInstance().connectionStatus == ConnectionStatus.NOT_CONNECTED) {
+                        navigateTo(TerminalFragment.TAG, TerminalFragment())
+                    }
+                }
+            }
+
+            // Call the encapsulated reconnect logic
+            reconnectDiscoveryCancelable = readerConnectionPersistence.attemptReconnect(
+                this,
+                Terminal.getInstance(),
+                failureCallback
+            )
+
+            // If attemptReconnect returned a cancelable, it means an attempt is in progress
+            if (reconnectDiscoveryCancelable != null) {
+                runOnUiThread { // Ensure fragment navigation is on the main thread
+                    // Retrieve the actual serial number for the UI if available
+                    val serialToShow = readerConnectionPersistence.getLastReaderSerialNumber() ?: "Connecting..."
+                    navigateTo(ConnectingToReaderFragment.TAG, ConnectingToReaderFragment.newInstance(serialToShow))
+                }
+            } else {
+                // If null, prerequisites weren't met (logged in attemptReconnect), go to terminal fragment
+                Log.d("MainActivity", "Reconnect prerequisites failed or not applicable. Navigating to TerminalFragment.")
+                navigateTo(TerminalFragment.TAG, TerminalFragment())
+            }
+
+        } else {
+            Log.d("MainActivity", "No saved reader or not attempting reconnect");
+            navigateTo(TerminalFragment.TAG, TerminalFragment())
+        }
     }
 
     /**
