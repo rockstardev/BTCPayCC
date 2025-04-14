@@ -34,6 +34,7 @@ class ConnectedReaderFragment : Fragment() {
 
     private lateinit var clearSavedConnectionButton: View
 
+    private var askForNameEmail: Boolean = false
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -52,6 +53,11 @@ class ConnectedReaderFragment : Fragment() {
             // TODO: Set status as well
         }
 
+        val askSwitch = view.findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.ask_name_email_switch)
+        askSwitch.isChecked = false
+        askSwitch.setOnCheckedChangeListener { _, isChecked ->
+            askForNameEmail = isChecked
+        }
         // Set up the disconnect button
         val activityRef = WeakReference(activity)
         view.findViewById<View>(R.id.disconnect_button).setOnClickListener {

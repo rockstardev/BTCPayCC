@@ -76,6 +76,16 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal" />
 
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/ask_name_email_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ask for Name / Email after paid"
+                android:checked="false"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginTop="12dp" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
