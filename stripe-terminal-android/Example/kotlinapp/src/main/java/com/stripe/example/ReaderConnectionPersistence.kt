@@ -28,44 +28,56 @@ class ReaderConnectionPersistence(context: Context) {
 
     companion object {
         private const val SHARED_PREFS_NAME = "StripeTerminalExamplePrefs"
-        private const val PREF_LAST_LOCATION_ID = "last_location_id"
-        private const val PREF_LAST_READER_SERIAL = "last_reader_serial"
-        private const val PREF_LAST_CONNECTION_TYPE = "last_connection_type" // New key
+        private const val KEY_LOCATION_ID = "reader_connection_location_id"
+        private const val KEY_READER_SERIAL = "reader_connection_serial"
+        private const val KEY_CONNECTION_TYPE = "reader_connection_type"
+        private const val KEY_IS_SIMULATED = "reader_connection_is_simulated"
     }
 
     private val sharedPreferences = context.getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE)
 
-    fun saveReaderConnectionDetails(locationId: String, serialNumber: String, type: ConnectionType) {
-        sharedPreferences.edit {
-            putString(PREF_LAST_LOCATION_ID, locationId)
-            putString(PREF_LAST_READER_SERIAL, serialNumber)
-            putString(PREF_LAST_CONNECTION_TYPE, type.name)
+    fun saveReaderConnectionDetails(
+        locationId: String,
+        serialNumber: String,
+        connectionType: ConnectionType
+    ) {
+        sharedPreferences.edit() {
+            putString(KEY_LOCATION_ID, locationId)
+                .putString(KEY_READER_SERIAL, serialNumber)
+                .putString(KEY_CONNECTION_TYPE, connectionType.name)
         }
     }
 
+    fun saveDiscoverySimulationStatus(isSimulated: Boolean) {
+        sharedPreferences.edit() {
+            putBoolean(KEY_IS_SIMULATED, isSimulated)
+        }
+        Log.d("ReaderConnectionPersistence", "Saved discovery simulation status: $isSimulated")
+    }
+
     fun getLastReaderLocationId(): String? {
-        return sharedPreferences.getString(PREF_LAST_LOCATION_ID, null)
+        return sharedPreferences.getString(KEY_LOCATION_ID, null)
     }
 
     fun getLastReaderSerialNumber(): String? {
-        return sharedPreferences.getString(PREF_LAST_READER_SERIAL, null)
+        return sharedPreferences.getString(KEY_READER_SERIAL, null)
     }
 
-    // New method to get connection type
     fun getLastReaderConnectionType(): ConnectionType? {
-        val typeName = sharedPreferences.getString(PREF_LAST_CONNECTION_TYPE, null)
+        val typeName = sharedPreferences.getString(KEY_CONNECTION_TYPE, null)
         return try {
-            typeName?.let { ConnectionType.valueOf(it) } // Convert String back to enum
+            typeName?.let { ConnectionType.valueOf(it) }
         } catch (e: IllegalArgumentException) {
-            null // Handle case where saved value is invalid
+            null
         }
     }
 
     fun clearReaderConnectionDetails() {
-        sharedPreferences.edit {
-            remove(PREF_LAST_LOCATION_ID)
-            remove(PREF_LAST_READER_SERIAL)
-            remove(PREF_LAST_CONNECTION_TYPE)
+        sharedPreferences.edit() {
+            remove(KEY_LOCATION_ID)
+                .remove(KEY_READER_SERIAL)
+                .remove(KEY_CONNECTION_TYPE)
+                .remove(KEY_IS_SIMULATED)
         }
     }
 
@@ -86,18 +98,27 @@ class ReaderConnectionPersistence(context: Context) {
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     fun attemptReconnect(
-        activity: MainActivity, // Should implement necessary ReaderListener interfaces
-        terminal: Terminal,     // Pass Terminal instance
+        activity: MainActivity,
+        terminal: Terminal,
         failureCallback: (ReconnectException) -> Unit
     ): Cancelable? {
-        val lastLocationId = getLastReaderLocationId()
-        val lastReaderSerial = getLastReaderSerialNumber()
-        val lastConnectionType = getLastReaderConnectionType()
+        val lastLocationId = sharedPreferences.getString(KEY_LOCATION_ID, null)
+        val lastReaderSerial = sharedPreferences.getString(KEY_READER_SERIAL, null)
+        val lastConnectionTypeString = sharedPreferences.getString(KEY_CONNECTION_TYPE, null)
+        val lastIsSimulated = sharedPreferences.getBoolean(KEY_IS_SIMULATED, false)
 
-        // Validate saved details first
-        if (lastLocationId == null || lastReaderSerial == null || lastConnectionType == null) {
+        // Validate all details are present
+        if (lastLocationId == null || lastReaderSerial == null || lastConnectionTypeString == null) {
             Log.e("ReaderConnectionPersistence", "Attempted reconnect with incomplete saved details.")
             failureCallback(ReconnectException("Incomplete saved reader details for reconnect."))
+            return null
+        }
+
+        val lastConnectionType = try {
+            ConnectionType.valueOf(lastConnectionTypeString)
+        } catch (e: IllegalArgumentException) {
+            Log.e("ReaderConnectionPersistence", "Invalid saved connection type: $lastConnectionTypeString")
+            failureCallback(ReconnectException("Invalid saved connection type"))
             return null
         }
 
@@ -105,11 +126,12 @@ class ReaderConnectionPersistence(context: Context) {
 
         // Determine Discovery Configuration based on connection type
         val discoveryConfig: DiscoveryConfiguration = when (lastConnectionType) {
-            ConnectionType.BLUETOOTH -> DiscoveryConfiguration.BluetoothDiscoveryConfiguration(0, false)
-            ConnectionType.TAP_TO_PAY -> DiscoveryConfiguration.TapToPayDiscoveryConfiguration(false)
-            ConnectionType.INTERNET -> DiscoveryConfiguration.InternetDiscoveryConfiguration(isSimulated = false)
+            ConnectionType.BLUETOOTH -> DiscoveryConfiguration.BluetoothDiscoveryConfiguration(10, lastIsSimulated)
+            ConnectionType.TAP_TO_PAY -> DiscoveryConfiguration.TapToPayDiscoveryConfiguration(lastIsSimulated)
+            ConnectionType.INTERNET -> DiscoveryConfiguration.InternetDiscoveryConfiguration(10, lastLocationId, lastIsSimulated)
             // No 'else' needed because we checked lastConnectionType is not null earlier
         }
+
         Log.d("ReaderConnectionPersistence", "Using DiscoveryConfiguration: ${discoveryConfig::class.java.simpleName}")
 
         // Use a mutable variable within the scope to hold the cancelable
@@ -121,9 +143,9 @@ class ReaderConnectionPersistence(context: Context) {
 
             override fun onUpdateDiscoveredReaders(readers: List<Reader>) {
                 if (connectAttempted || discoveryCancelable == null) {
-                     // Already connecting or discovery was cancelled externally
-                     // Check discoveryCancelable null status to ensure we don't proceed if externally cancelled
-                     return
+                    // Already connecting or discovery was cancelled externally
+                    // Check discoveryCancelable null status to ensure we don't proceed if externally cancelled
+                    return
                 }
 
                 val targetReader = readers.firstOrNull { it.serialNumber == lastReaderSerial }
@@ -193,7 +215,7 @@ class ReaderConnectionPersistence(context: Context) {
         activity: MainActivity,
         terminal: Terminal,
         reader: Reader,
-        connectionType: ConnectionType, // The type we *intended* to connect with
+        connectionType: ConnectionType,
         locationId: String,
         failureCallback: (ReconnectException) -> Unit
     ) {

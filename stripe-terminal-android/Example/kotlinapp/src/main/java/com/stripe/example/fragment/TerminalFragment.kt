@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import androidx.core.content.edit
@@ -12,6 +13,7 @@ import androidx.fragment.app.Fragment
 import com.stripe.example.DiscoverReadersActivity
 import com.stripe.example.NavigationListener
 import com.stripe.example.R
+import com.stripe.example.ReaderConnectionPersistence
 import com.stripe.example.databinding.FragmentTerminalBinding
 import com.stripe.example.fragment.discovery.DiscoveryMethod
 import com.stripe.example.viewmodel.TerminalViewModel
@@ -50,9 +52,13 @@ class TerminalFragment : Fragment(R.layout.fragment_terminal) {
     }
 
     private lateinit var viewModel: TerminalViewModel
+    private lateinit var readerConnectionPersistence: ReaderConnectionPersistence
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        readerConnectionPersistence = ReaderConnectionPersistence(requireContext().applicationContext)
+
         arguments?.let {
             viewModel = TerminalViewModel(
                 it.getSerializable(DISCOVERY_METHOD) as DiscoveryMethod,
@@ -94,6 +100,7 @@ class TerminalFragment : Fragment(R.layout.fragment_terminal) {
 
         // Link up the discovery button
         viewBinding.discoverButton.setOnClickListener {
+            readerConnectionPersistence.saveDiscoverySimulationStatus(viewModel.simulated)
             (activity as? NavigationListener)?.onRequestDiscovery(
                 viewModel.simulated,
                 viewModel.discoveryMethod,
