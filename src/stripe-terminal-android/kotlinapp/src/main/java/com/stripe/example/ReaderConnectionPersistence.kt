@@ -14,6 +14,7 @@ import com.stripe.stripeterminal.external.callable.ReaderCallback
 import com.stripe.stripeterminal.external.models.ConnectionConfiguration
 import com.stripe.stripeterminal.external.models.DiscoveryConfiguration
 import com.stripe.stripeterminal.external.models.Reader
+import com.stripe.stripeterminal.external.models.TerminalErrorCode
 import com.stripe.stripeterminal.external.models.TerminalException
 
 /**
@@ -101,7 +102,8 @@ class ReaderConnectionPersistence(context: Context) {
     fun attemptReconnect(
         activity: MainActivity,
         terminal: Terminal,
-        failureCallback: (ReconnectException) -> Unit
+        failureCallback: (ReconnectException) -> Unit,
+        timeoutSeconds: Int
     ): Cancelable? {
         val lastLocationId = sharedPreferences.getString(KEY_LOCATION_ID, null)
         val lastReaderSerial = sharedPreferences.getString(KEY_READER_SERIAL, null)
@@ -127,9 +129,9 @@ class ReaderConnectionPersistence(context: Context) {
 
         // Determine Discovery Configuration based on connection type
         val discoveryConfig: DiscoveryConfiguration = when (lastConnectionType) {
-            ConnectionType.BLUETOOTH -> DiscoveryConfiguration.BluetoothDiscoveryConfiguration(15, lastIsSimulated)
+            ConnectionType.BLUETOOTH -> DiscoveryConfiguration.BluetoothDiscoveryConfiguration(timeoutSeconds, lastIsSimulated)
             ConnectionType.TAP_TO_PAY -> DiscoveryConfiguration.TapToPayDiscoveryConfiguration(lastIsSimulated)
-            ConnectionType.INTERNET -> DiscoveryConfiguration.InternetDiscoveryConfiguration(15, lastLocationId, lastIsSimulated)
+            ConnectionType.INTERNET -> DiscoveryConfiguration.InternetDiscoveryConfiguration(timeoutSeconds, lastLocationId, lastIsSimulated)
             // No 'else' needed because we checked lastConnectionType is not null earlier
         }
 
@@ -203,7 +205,10 @@ class ReaderConnectionPersistence(context: Context) {
 
                 override fun onFailure(e: TerminalException) {
                     Log.e("ReaderConnectionPersistence", "Failed to START reconnect discovery: ${e.errorMessage}")
-                    failureCallback(ReconnectException("Failed to start reader discovery", e))
+                    // Ensure that it is not cancel by user, because that's what we call as well at line 161
+                    //if (e.errorCode != TerminalErrorCode.USER_ERROR_CANCEL) {
+                    //    failureCallback(ReconnectException("Failed to start reader discovery", e))
+                    //}
                 }
             }
         )

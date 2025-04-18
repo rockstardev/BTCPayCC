@@ -424,7 +424,8 @@ class MainActivity :
             reconnectDiscoveryCancelable = readerConnectionPersistence.attemptReconnect(
                 this,
                 Terminal.getInstance(),
-                failureCallback
+                failureCallback,
+                20
             )
 
             // If attemptReconnect returned a cancelable, it means an attempt is in progress
