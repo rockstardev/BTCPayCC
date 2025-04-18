@@ -1,5 +1,7 @@
 # Stripe Terminal Android
 
+Original source: https://github.com/stripe/stripe-terminal-android
+
 For information on migrating from earlier versions of the Android SDK, see the [migration guide](https://stripe.com/docs/terminal/sdk-migration-guide).
 
 # Requirements
