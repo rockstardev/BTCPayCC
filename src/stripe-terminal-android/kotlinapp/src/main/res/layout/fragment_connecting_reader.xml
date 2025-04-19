@@ -6,26 +6,43 @@
     android:layout_height="match_parent"
     tools:context=".fragment.ConnectingToReaderFragment">
 
+    <!-- Removed Group as individual constraints handle positioning -->
+
     <ProgressBar
         android:id="@+id/connecting_progress"
         style="?android:attr/progressBarStyleLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toTopOf="@+id/connecting_message"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <TextView
         android:id="@+id/connecting_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp" 
         android:text="Connecting..."
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/readercard" 
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/connecting_progress"
         tools:text="Connecting to SIMULATOR..." />
+
+    <ImageView
+        android:id="@+id/readercard"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/reader"
+        android:src="@mipmap/reader"
+        android:alpha="1"
+        app:layout_constraintBottom_toBottomOf="parent" 
+        app:layout_constraintEnd_toEndOf="parent" 
+        app:layout_constraintStart_toStartOf="parent" 
+        app:layout_constraintTop_toBottomOf="@+id/connecting_message" /> 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

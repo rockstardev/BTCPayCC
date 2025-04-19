@@ -97,7 +97,7 @@
     <string name="settings">Settings</string>
     <string name="location">Location</string>
     <string name="create_location">Create Location</string>
-    <string name="connecting_to_reader">Connecting to %1$s…</string>
+    <string name="connecting_to_reader">Connecting to %1$s</string>
     <string name="discovery_method_internet">Internet</string>
     <string name="discovery_method_bluetooth_scan">Bluetooth Scan</string>
 </resources>

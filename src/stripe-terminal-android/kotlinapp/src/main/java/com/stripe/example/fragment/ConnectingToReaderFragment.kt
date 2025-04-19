@@ -35,7 +35,12 @@ class ConnectingToReaderFragment : Fragment() {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_connecting_reader, container, false)
         val messageView = view.findViewById<TextView>(R.id.connecting_message)
-        val serialNumber = arguments?.getString(ARGS_SERIAL_NUMBER) ?: "unknown reader"
+        var serialNumber = arguments?.getString(ARGS_SERIAL_NUMBER) ?: "unknown reader"
+
+        // Truncate serial number if too long
+        if (serialNumber.length > 21) {
+            serialNumber = serialNumber.substring(0, 21) + "..."
+        }
 
         messageView.text = getString(R.string.connecting_to_reader, serialNumber)
 
