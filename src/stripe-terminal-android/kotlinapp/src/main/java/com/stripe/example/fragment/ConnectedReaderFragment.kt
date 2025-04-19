@@ -30,6 +30,15 @@ class ConnectedReaderFragment : Fragment() {
 
     companion object {
         const val TAG = "com.stripe.example.fragment.ConnectedReaderFragment"
+        private const val ARGS_IS_FROM_RECONNECT = "is_from_reconnect"
+
+        fun newInstance(isFromReconnect: Boolean = false): ConnectedReaderFragment {
+            val fragment = ConnectedReaderFragment()
+            val args = Bundle()
+            args.putBoolean(ARGS_IS_FROM_RECONNECT, isFromReconnect)
+            fragment.arguments = args
+            return fragment
+        }
     }
 
     private lateinit var clearSavedConnectionButton: View
@@ -96,8 +105,8 @@ class ConnectedReaderFragment : Fragment() {
         }
 
         // Set up the keycard payment button
-        view.findViewById<View>(R.id.keycard_payment_button).setOnClickListener {
-            (activity as? NavigationListener)?.onSelectKeycardPaymentWorkflow()
+        view.findViewById<View>(R.id.keypad_payment_button).setOnClickListener {
+            (activity as? NavigationListener)?.onSelectKeypadPaymentWorkflow()
         }
 
         // Set up the save card button
@@ -125,6 +134,17 @@ class ConnectedReaderFragment : Fragment() {
         updateClearButtonVisibility()
 
         return view
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Check if we should trigger the collect payment flow
+        val isFromReconnect = arguments?.getBoolean(ARGS_IS_FROM_RECONNECT, false) == true
+        if (isFromReconnect) {
+            Log.d(TAG, "Navigated from reconnect, triggering keypad payment view right away.")
+            view.findViewById<View>(R.id.keypad_payment_button)?.performClick()
+        }
     }
 
     private fun updateTerminalOnlineIndicator(networkStatus: NetworkStatus) {

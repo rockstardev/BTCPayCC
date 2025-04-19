@@ -240,7 +240,10 @@ class ReaderConnectionPersistence(context: Context) {
             object : ReaderCallback { // Callback for this specific connection attempt
                 override fun onSuccess(connectedReader: Reader) {
                     Log.i("ReaderConnectionPersistence", "connectReader (for reconnect) successful for ${connectedReader.serialNumber}.")
-                    activity.navigateTo(ConnectedReaderFragment.TAG, ConnectedReaderFragment())
+                    activity.navigateTo(
+                        ConnectedReaderFragment.TAG,
+                        ConnectedReaderFragment.newInstance(isFromReconnect = true)
+                    )
                     // MainActivity's listeners (passed as 'listener') will handle UI updates
                 }
 

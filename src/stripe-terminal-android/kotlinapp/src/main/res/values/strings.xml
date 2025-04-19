@@ -6,7 +6,7 @@
     <string name="checking_for_update">Checking for update</string>
     <string name="collect_card_payment">Collect card payment</string>
     <string name="clear_saved_reader_connection">Clear saved reader connection</string>
-    <string name="keycard_payment">Keycard card payment</string>
+    <string name="keypad_payment">Keypad payment</string>
     <string name="collect_payment">Collect payment</string>
     <string name="collect_payment_description">Collect a card payment using a physical Stripe test card and a card reader</string>
     <string name="common_workflows">COMMON WORKFLOWS</string>

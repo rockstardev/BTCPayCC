@@ -3,7 +3,6 @@ package com.stripe.example
 import com.stripe.example.fragment.discovery.DiscoveryMethod
 import com.stripe.example.model.OfflineBehaviorSelection
 import com.stripe.stripeterminal.external.models.Reader
-import com.stripe.stripeterminal.external.models.Location
 
 /**
  * An `Activity` that should be notified when various navigation activities have been triggered
@@ -64,7 +63,7 @@ interface NavigationListener {
     /**
      * Notify the activity that the user wants to start the keycard payment workflow
      */
-    fun onSelectKeycardPaymentWorkflow()
+    fun onSelectKeypadPaymentWorkflow()
 
     /**
      * Notify the `Activity` that the user wants to start the workflow to save a card

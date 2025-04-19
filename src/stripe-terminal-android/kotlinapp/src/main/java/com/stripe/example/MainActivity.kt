@@ -198,7 +198,7 @@ class MainActivity :
         navigateTo(OfflinePaymentsLogFragment.TAG, OfflinePaymentsLogFragment())
     }
 
-    override fun onSelectKeycardPaymentWorkflow() {
+    override fun onSelectKeypadPaymentWorkflow() {
         navigateTo(KeypadFragment.TAG, KeypadFragment(), addToBackStack = true)
     }
 
