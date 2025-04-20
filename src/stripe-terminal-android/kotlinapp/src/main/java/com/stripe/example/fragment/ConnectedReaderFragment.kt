@@ -20,6 +20,7 @@ import com.stripe.stripeterminal.external.models.TerminalException
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
+import com.stripe.example.ReaderConnectionPersistence
 
 /**
  * The `ConnectedReaderFragment` shows the reader connection status and allows starting
@@ -41,8 +42,8 @@ class ConnectedReaderFragment : Fragment() {
         }
     }
 
-    private var askForNameEmail: Boolean = false
     private lateinit var clearSavedConnectionButton: View
+    private lateinit var readerConnectionPersistence: ReaderConnectionPersistence
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -62,10 +63,11 @@ class ConnectedReaderFragment : Fragment() {
             // TODO: Set status as well
         }
 
+        readerConnectionPersistence = ReaderConnectionPersistence(requireContext())
         val askSwitch = view.findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.ask_name_email_switch)
-        askSwitch.isChecked = false
+        askSwitch.isChecked = readerConnectionPersistence.loadAskForNameEmail()
         askSwitch.setOnCheckedChangeListener { _, isChecked ->
-            askForNameEmail = isChecked
+            readerConnectionPersistence.saveAskForNameEmail(isChecked)
         }
         // Set up the disconnect button
         val activityRef = WeakReference(activity)

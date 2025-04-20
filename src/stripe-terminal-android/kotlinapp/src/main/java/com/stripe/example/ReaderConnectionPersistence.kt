@@ -34,9 +34,20 @@ class ReaderConnectionPersistence(context: Context) {
         private const val KEY_READER_SERIAL = "reader_connection_serial"
         private const val KEY_CONNECTION_TYPE = "reader_connection_type"
         private const val KEY_IS_SIMULATED = "reader_connection_is_simulated"
+        private const val ASK_FOR_NAME_EMAIL = "ask_for_name_email"
     }
 
     private val sharedPreferences = context.getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE)
+
+    fun saveAskForNameEmail(ask: Boolean) {
+        sharedPreferences.edit() {
+            putBoolean(ASK_FOR_NAME_EMAIL, ask)
+        }
+    }
+
+    fun loadAskForNameEmail() : Boolean {
+        return sharedPreferences.getBoolean(ASK_FOR_NAME_EMAIL, false)
+    }
 
     fun saveReaderConnectionDetails(
         locationId: String,

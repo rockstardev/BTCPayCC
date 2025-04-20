@@ -10,6 +10,8 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.stripe.example.NavigationListener
 import com.stripe.example.R
+import com.stripe.example.model.OfflineBehaviorSelection
+import com.stripe.stripeterminal.external.models.OfflineBehavior
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -117,7 +119,8 @@ class KeypadFragment : Fragment() {
     private fun onChargePressed() {
         val finalAmountCents = calculateTotalCents()
         if (finalAmountCents > 0) {
-            (activity as? NavigationListener)?.onChargeKeypadAmount(finalAmountCents, CURRENCY)
+            (activity as? NavigationListener)?.onRequestPayment(finalAmountCents, CURRENCY, false, false,
+                false, OfflineBehaviorSelection.DEFAULT)
         }
         resetExitCodeSequence() // Reset sequence on charge press
     }

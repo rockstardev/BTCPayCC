@@ -2,6 +2,7 @@ package com.stripe.example
 
 import com.stripe.example.fragment.discovery.DiscoveryMethod
 import com.stripe.example.model.OfflineBehaviorSelection
+import com.stripe.stripeterminal.external.models.PaymentIntent
 import com.stripe.stripeterminal.external.models.Reader
 
 /**
@@ -47,7 +48,7 @@ interface NavigationListener {
         skipTipping: Boolean,
         extendedAuth: Boolean,
         incrementalAuth: Boolean,
-        offlineBehaviorSelection: OfflineBehaviorSelection,
+        offlineBehaviorSelection: OfflineBehaviorSelection
     )
 
     /**
@@ -81,12 +82,9 @@ interface NavigationListener {
     fun onSelectViewOfflineLogs()
 
     /**
-     * Notify the `Activity` that the user has confirmed the amount on the keypad and wants to charge.
-     *
-     * @param amount The amount to charge, in the lowest denomination of the currency (e.g., cents)
-     * @param currency The currency code (e.g., "usd")
+     * Notify the activity that the user needs to enter name and email.
      */
-    fun onChargeKeypadAmount(amount: Long, currency: String)
+    fun navigateToNameEmailForm(paymentIntent: PaymentIntent?)
 
     /**
      * Notify the `Activity` that the user wants to cancel/exit the keypad entry.

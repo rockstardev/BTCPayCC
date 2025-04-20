@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import com.stripe.example.fragment.ConnectedReaderFragment
 import com.stripe.example.fragment.ConnectingToReaderFragment
 import com.stripe.example.fragment.KeypadFragment
+import com.stripe.example.fragment.NameEmailFormFragment
 import com.stripe.example.fragment.PaymentFragment
 import com.stripe.example.fragment.TerminalFragment
 import com.stripe.example.fragment.UpdateReaderFragment
@@ -41,6 +42,7 @@ import com.stripe.stripeterminal.external.models.ReaderSoftwareUpdate
 import com.stripe.stripeterminal.external.models.TerminalException
 import com.stripe.stripeterminal.log.LogLevel
 import com.stripe.example.ReaderConnectionPersistence
+import com.stripe.stripeterminal.external.models.PaymentIntent
 
 class MainActivity :
     AppCompatActivity(),
@@ -151,7 +153,7 @@ class MainActivity :
         skipTipping: Boolean,
         extendedAuth: Boolean,
         incrementalAuth: Boolean,
-        offlineBehaviorSelection: OfflineBehaviorSelection,
+        offlineBehaviorSelection: OfflineBehaviorSelection
     ) {
         navigateTo(
             EventFragment.TAG,
@@ -161,7 +163,8 @@ class MainActivity :
                 skipTipping,
                 extendedAuth,
                 incrementalAuth,
-                offlineBehaviorSelection
+                offlineBehaviorSelection,
+                readerConnectionPersistence.loadAskForNameEmail()
             )
         )
     }
@@ -202,18 +205,6 @@ class MainActivity :
         navigateTo(KeypadFragment.TAG, KeypadFragment(), addToBackStack = true)
     }
 
-    override fun onChargeKeypadAmount(amount: Long, currency: String) {
-        // Call the existing payment request function with defaults for keypad flow
-        onRequestPayment(
-            amount = amount,
-            currency = currency,
-            skipTipping = false, // Default for keypad
-            extendedAuth = false, // Default for keypad
-            incrementalAuth = false, // Default for keypad
-            offlineBehaviorSelection = OfflineBehaviorSelection.DEFAULT // Default for keypad
-        )
-    }
-
     override fun onCancelKeypadEntry() {
         supportFragmentManager.popBackStack()
     }
@@ -233,6 +224,20 @@ class MainActivity :
 
     override fun hasSavedConnectionDetails(): Boolean {
         return readerConnectionPersistence.hasSavedConnectionDetails()
+    }
+
+    override fun navigateToNameEmailForm(paymentIntent: PaymentIntent?) {
+        // Only navigate if we have a valid PaymentIntent
+        // If null, it means the flow ended without a successful payment (e.g., cancelled, failed)
+        // In that case, we might not want to show the name/email form.
+        // Adjust this logic if you *do* want to show the form even on failure/cancel.
+        paymentIntent?.let {
+            navigateTo(
+                NameEmailFormFragment.TAG,
+                NameEmailFormFragment.newInstance(it),
+                addToBackStack = true
+            )
+        }
     }
 
     // Terminal event callbacks

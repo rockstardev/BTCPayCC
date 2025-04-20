@@ -62,6 +62,7 @@ class EventFragment : Fragment(), MobileReaderListener {
         private const val EXTENDED_AUTH = "com.stripe.example.fragment.event.EventFragment.extended_auth"
         private const val INCREMENTAL_AUTH = "com.stripe.example.fragment.event.EventFragment.incremental_auth"
         private const val OFFLINE_BEHAVIOR = "com.stripe.example.fragment.event.EventFragment.offline_behavior"
+        private const val ASK_FOR_NAME_EMAIL = "com.stripe.example.fragment.event.EventFragment.ask_for_name_email"
 
         fun collectSetupIntentPaymentMethod(): EventFragment {
             val fragment = EventFragment()
@@ -78,7 +79,8 @@ class EventFragment : Fragment(), MobileReaderListener {
             skipTipping: Boolean,
             extendedAuth: Boolean,
             incrementalAuth: Boolean,
-            offlineBehaviorSelection: OfflineBehaviorSelection
+            offlineBehaviorSelection: OfflineBehaviorSelection,
+            askForNameEmail: Boolean
         ): EventFragment {
             val fragment = EventFragment()
             val bundle = Bundle()
@@ -90,6 +92,7 @@ class EventFragment : Fragment(), MobileReaderListener {
             bundle.putBoolean(EXTENDED_AUTH, extendedAuth)
             bundle.putBoolean(INCREMENTAL_AUTH, incrementalAuth)
             bundle.putSerializable(OFFLINE_BEHAVIOR, offlineBehaviorSelection)
+            bundle.putBoolean(ASK_FOR_NAME_EMAIL, askForNameEmail)
             fragment.arguments = bundle
             return fragment
         }
@@ -113,7 +116,7 @@ class EventFragment : Fragment(), MobileReaderListener {
                     ApiClient.capturePaymentIntent(it)
                     addEvent("Captured PaymentIntent", "backend.capturePaymentIntent")
                 }
-                completeFlow()
+                completeFlow(paymentIntent)
             }
 
             override fun onFailure(e: TerminalException) {
@@ -197,7 +200,7 @@ class EventFragment : Fragment(), MobileReaderListener {
         override fun onSuccess(setupIntent: SetupIntent) {
             addEvent("Collected PaymentMethod", "terminal.collectSetupIntentPaymentMethod")
             viewModel.collectTask = null
-            completeFlow()
+            completeFlow(paymentIntent)
         }
 
         override fun onFailure(e: TerminalException) {
@@ -305,19 +308,19 @@ class EventFragment : Fragment(), MobileReaderListener {
                                                 }
                                             } else {
                                                 addEvent("Cancel PaymentIntent failed", "backend.cancelPaymentIntent")
-                                                completeFlow()
+                                                completeFlow(null)
                                             }
                                         }
 
                                         override fun onFailure(call: Call<Void>, t: Throwable) {
                                             Toast.makeText(activity, t.message, Toast.LENGTH_LONG).show()
-                                            completeFlow()
+                                            completeFlow(null)
                                         }
                                     }
                                 )
                             } ?: run {
                                 addEvent("Cancel PaymentIntent Skipped", "backend.cancelPaymentIntent")
-                                completeFlow()
+                                completeFlow(null)
                             }
                         } else {
                             Terminal.getInstance().cancelPaymentIntent(it, cancelPaymentIntentCallback)
@@ -359,10 +362,14 @@ class EventFragment : Fragment(), MobileReaderListener {
         addEvent(reason.name, "listener.onDisconnect")
     }
 
-    fun completeFlow() {
+    fun completeFlow(paymentIntent: PaymentIntent?) {
         activityRef.get()?.let {
             it.runOnUiThread {
                 viewModel.isComplete.value = true
+                val askForNameEmail = arguments?.getBoolean(ASK_FOR_NAME_EMAIL) ?: false
+                if (askForNameEmail) {
+                    (activity as? NavigationListener)?.navigateToNameEmailForm(paymentIntent)
+                }
             }
         }
     }
@@ -377,6 +384,6 @@ class EventFragment : Fragment(), MobileReaderListener {
 
     private fun onFailure(e: TerminalException) {
         addEvent(e.errorMessage, e.errorCode.toString())
-        completeFlow()
+        completeFlow(null)
     }
 }
