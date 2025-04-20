@@ -41,9 +41,9 @@ class ConnectedReaderFragment : Fragment() {
         }
     }
 
+    private var askForNameEmail: Boolean = false
     private lateinit var clearSavedConnectionButton: View
 
-    private var askForNameEmail: Boolean = false
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -133,15 +133,17 @@ class ConnectedReaderFragment : Fragment() {
         // Update button visibility based on saved state
         updateClearButtonVisibility()
 
+        isFromReconnect = arguments?.getBoolean(ARGS_IS_FROM_RECONNECT, false) == true
+
         return view
     }
 
+    private var isFromReconnect = false
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Check if we should trigger the collect payment flow
-        val isFromReconnect = arguments?.getBoolean(ARGS_IS_FROM_RECONNECT, false) == true
         if (isFromReconnect) {
+            isFromReconnect = false
             Log.d(TAG, "Navigated from reconnect, triggering keypad payment view right away.")
             view.findViewById<View>(R.id.keypad_payment_button)?.performClick()
         }
