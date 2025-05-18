@@ -339,3 +339,62 @@ post '/create_location' do
   content_type :json
   return location.to_json
 end
+
+# This endpoint handles updating a payment intent with customer information
+# It will:
+# 1. Look up a customer by email, or create a new one if not found
+# 2. Update the payment intent with the customer ID
+post '/update_payment_intent_customer' do
+  payment_intent_id = params["payment_intent_id"]
+  customer_email = params["customer_email"]
+  customer_name = params["customer_name"]
+  
+  if payment_intent_id.nil? || customer_email.nil?
+    status 400
+    return log_info("'payment_intent_id' and 'customer_email' are required parameters")
+  end
+
+  # Step 1: Look up or create customer
+  begin
+    customerList = Stripe::Customer.list(email: customer_email, limit: 1).data
+    customer = nil
+    
+    if (customerList.length == 1)
+      # Use existing customer
+      customer = customerList[0]
+      log_info("Found existing customer: #{customer.id}")
+      
+      # Update name if provided and different
+      if !customer_name.nil? && customer_name != customer.name
+        customer = Stripe::Customer.update(
+          customer.id,
+          { name: customer_name }
+        )
+        log_info("Updated customer name: #{customer.id}")
+      end
+    else
+      # Create new customer
+      customer_params = { email: customer_email }
+      if !customer_name.nil?
+        customer_params[:name] = customer_name
+      end
+      
+      customer = Stripe::Customer.create(customer_params)
+      log_info("Created new customer: #{customer.id}")
+    end
+
+    # Step 2: Update payment intent with customer ID
+    payment_intent = Stripe::PaymentIntent.update(
+      payment_intent_id,
+      { customer: customer.id }
+    )
+
+    log_info("Updated PaymentIntent #{payment_intent_id} with customer #{customer.id}")
+  rescue Stripe::StripeError => e
+    status 402
+    return log_info("Error updating PaymentIntent with customer info: #{e.message}")
+  end
+
+  status 200
+  return {:intent => payment_intent.id, :secret => payment_intent.client_secret, :customer => customer.id}.to_json
+end
