@@ -12,7 +12,17 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.stripe.example.R
+import com.stripe.example.network.ApiClient
+import com.stripe.stripeterminal.Terminal
 import com.stripe.stripeterminal.external.models.PaymentIntent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.io.IOException
 
 class NameEmailFormFragment : Fragment() {
 
@@ -64,19 +74,48 @@ class NameEmailFormFragment : Fragment() {
             val email = emailEditText.text.toString().trim()
 
             if (validateInput(name, email) && paymentIntentId != null) {
-                // TODO: Submit email and name to Stripe SDK to update paymentIntent with customer data
+                updatePaymentWithCustomerInfo(paymentIntentId!!, name, email)
             } else {
-                    Toast.makeText(requireContext(), "Error: Missing payment information.", Toast.LENGTH_LONG).show()
-
+                Toast.makeText(requireContext(), "Error: Missing payment information.", Toast.LENGTH_LONG).show()
             }
         }
 
         cancelButton.setOnClickListener {
-            // TODO: Go back to previous fragment
+            // Go back to keypad entrance form
+            parentFragmentManager.popBackStack()
         }
     }
 
     // Input validation logic
+    private fun updatePaymentWithCustomerInfo(paymentIntentId: String, name: String, email: String) {
+        // Show loading indicator or disable button
+        submitButton.isEnabled = false
+        
+        // Update payment intent with full customer information
+        ApiClient.updatePaymentIntentCustomer(
+            id = paymentIntentId,
+            name = name,
+            email = email,
+            callback = object : Callback<Void> {
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    submitButton.isEnabled = true
+                    if (response.isSuccessful) {
+                        // Return to previous screen on success
+                        parentFragmentManager.popBackStack()
+                        Toast.makeText(requireContext(), "Customer information saved", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(requireContext(), "Error: ${response.message()}", Toast.LENGTH_LONG).show()
+                    }
+                }
+                
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    submitButton.isEnabled = true
+                    Toast.makeText(requireContext(), "Error updating customer info: ${t.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        )
+    }
+
     private fun validateInput(name: String, email: String): Boolean {
         var isValid = true
 

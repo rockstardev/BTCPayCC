@@ -45,4 +45,15 @@ interface BackendService {
     @FormUrlEncoded
     @POST("cancel_payment_intent")
     fun cancelPaymentIntent(@Field("payment_intent_id") id: String): Call<Void>
+
+    /**
+     * Update payment intent with customer information
+     */
+    @FormUrlEncoded
+    @POST("update_payment_intent_customer")
+    fun updatePaymentIntentCustomer(
+        @Field("payment_intent_id") id: String,
+        @Field("customer_name") name: String,
+        @Field("customer_email") email: String
+    ): Call<Void>
 }

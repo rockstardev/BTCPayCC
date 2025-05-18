@@ -74,4 +74,16 @@ object ApiClient {
     ) {
         service.cancelPaymentIntent(id).enqueue(callback)
     }
+
+    /**
+     * Update a payment intent with customer information
+     */
+    internal fun updatePaymentIntentCustomer(
+        id: String,
+        name: String,
+        email: String,
+        callback: Callback<Void>
+    ) {
+        service.updatePaymentIntentCustomer(id, name, email).enqueue(callback)
+    }
 }
