@@ -69,6 +69,10 @@ class NameEmailFormFragment : Fragment() {
         emailEditText = view.findViewById(R.id.emailInput)
         submitButton = view.findViewById(R.id.submitButton)
         cancelButton = view.findViewById(R.id.skipButton)
+        
+        // Explicitly clear the text fields each time the fragment is created
+        nameEditText.setText("")
+        emailEditText.setText("")
 
         submitButton.setOnClickListener {
             val name = nameEditText.text.toString().trim()
@@ -82,8 +86,13 @@ class NameEmailFormFragment : Fragment() {
         }
 
         cancelButton.setOnClickListener {
-            // Go back to keypad entrance form
-            (activity as? NavigationListener)?.onRequestExitWorkflow()
+            activity?.let {
+                if (it is NavigationListener) {
+                    it.runOnUiThread {
+                        it.onRequestExitWorkflow()
+                    }
+                }
+            }
         }
     }
 
@@ -102,7 +111,13 @@ class NameEmailFormFragment : Fragment() {
                     submitButton.isEnabled = true
                     if (response.isSuccessful) {
                         // Return to keypad fragment on success
-                        (activity as? NavigationListener)?.onRequestExitWorkflow()
+                        activity?.let {
+                            if (it is NavigationListener) {
+                                it.runOnUiThread {
+                                    it.onRequestExitWorkflow()
+                                }
+                            }
+                        }
                         Toast.makeText(requireContext(), "Customer information saved", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(requireContext(), "Error: ${response.message()}", Toast.LENGTH_LONG).show()

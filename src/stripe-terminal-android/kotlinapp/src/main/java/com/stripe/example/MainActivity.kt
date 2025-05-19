@@ -155,8 +155,12 @@ class MainActivity :
         incrementalAuth: Boolean,
         offlineBehaviorSelection: OfflineBehaviorSelection
     ) {
+        // Create a unique tag for each payment session to prevent fragment reuse
+        val uniqueTag = "${EventFragment.TAG}_${System.currentTimeMillis()}"
+        
+        // Force creating a new fragment instance by using a unique tag
         navigateTo(
-            EventFragment.TAG,
+            uniqueTag,
             EventFragment.requestPayment(
                 amount,
                 currency,
@@ -165,7 +169,9 @@ class MainActivity :
                 incrementalAuth,
                 offlineBehaviorSelection,
                 readerConnectionPersistence.loadAskForNameEmail()
-            )
+            ),
+            replace = true,  // Replace any existing content
+            addToBackStack = false  // Don't add to back stack to keep navigation clean
         )
     }
 
