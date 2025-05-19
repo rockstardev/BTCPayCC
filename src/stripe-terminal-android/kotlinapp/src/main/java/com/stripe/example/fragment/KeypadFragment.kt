@@ -30,7 +30,7 @@ class KeypadFragment : Fragment() {
     private var currentEntryString: String = "0"
     private val addedAmounts = mutableListOf<Long>()
     private var exitCodeSequence = "" // Track the exit code sequence
-    private val TARGET_EXIT_SEQUENCE = "CC++C+"
+    private val TARGET_EXIT_SEQUENCE = "CC++CC++"
 
     // Views
     private lateinit var amountDisplay: TextView
