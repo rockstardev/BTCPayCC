@@ -11,6 +11,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.stripe.example.NavigationListener
 import com.stripe.example.R
 import com.stripe.example.network.ApiClient
 import com.stripe.stripeterminal.Terminal
@@ -82,7 +83,7 @@ class NameEmailFormFragment : Fragment() {
 
         cancelButton.setOnClickListener {
             // Go back to keypad entrance form
-            parentFragmentManager.popBackStack()
+            (activity as? NavigationListener)?.onRequestExitWorkflow()
         }
     }
 
@@ -100,8 +101,8 @@ class NameEmailFormFragment : Fragment() {
                 override fun onResponse(call: Call<Void>, response: Response<Void>) {
                     submitButton.isEnabled = true
                     if (response.isSuccessful) {
-                        // Return to previous screen on success
-                        parentFragmentManager.popBackStack()
+                        // Return to keypad fragment on success
+                        (activity as? NavigationListener)?.onRequestExitWorkflow()
                         Toast.makeText(requireContext(), "Customer information saved", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(requireContext(), "Error: ${response.message()}", Toast.LENGTH_LONG).show()
