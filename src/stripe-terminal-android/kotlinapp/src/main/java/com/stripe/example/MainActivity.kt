@@ -137,9 +137,18 @@ class MainActivity :
      * Callback function called to exit the payment workflow
      */
     override fun onRequestExitWorkflow() {
-        if (Terminal.getInstance().connectionStatus == ConnectionStatus.CONNECTED) {
+        // Check if we need to return to KeypadFragment
+        // Find if KeypadFragment exists in the stack
+        val keypadFragment = supportFragmentManager.findFragmentByTag(KeypadFragment.TAG)
+        
+        if (keypadFragment != null) {
+            // We came from KeypadFragment, so return there
+            navigateTo(KeypadFragment.TAG, KeypadFragment())
+        } else if (Terminal.getInstance().connectionStatus == ConnectionStatus.CONNECTED) {
+            // Default case when connected
             navigateTo(ConnectedReaderFragment.TAG, ConnectedReaderFragment())
         } else {
+            // Default case when not connected
             navigateTo(TerminalFragment.TAG, TerminalFragment())
         }
     }
