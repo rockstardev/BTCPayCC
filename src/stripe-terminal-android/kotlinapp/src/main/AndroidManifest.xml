@@ -19,6 +19,7 @@
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name="com.stripe.example.MainActivity"
             android:screenOrientation="fullSensor"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
